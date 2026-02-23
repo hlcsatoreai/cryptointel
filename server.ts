@@ -65,11 +65,17 @@ async function updateCryptoData() {
   console.log("Updating crypto data...");
   try {
     // 1. Fetch Binance Prices in EUR
-    const binanceRes = await axios.get("https://api.binance.com/api/v3/ticker/24hr");
+    const binanceRes = await axios.get("https://api.binance.com/api/v3/ticker/24hr").catch(e => {
+      console.error("Binance API error:", e.message);
+      return { data: [] };
+    });
     const eurPairs = binanceRes.data.filter((p: any) => p.symbol.endsWith("EUR"));
 
     // 2. Fetch Fear & Greed
-    const fgRes = await axios.get("https://api.alternative.me/fng/");
+    const fgRes = await axios.get("https://api.alternative.me/fng/").catch(e => {
+      console.error("Fear & Greed API error:", e.message);
+      return { data: { data: [{ value: "50" }] } };
+    });
     const fearGreed = parseInt(fgRes.data.data[0].value);
 
     // 3. Fetch BTC Dominance (CoinGecko)
@@ -156,15 +162,12 @@ app.get("/api/events", (req, res) => {
 });
 
 async function startServer() {
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    app.use(express.static(path.join(__dirname, "dist")));
-  }
+  const vite = await createViteServer({
+    server: { middlewareMode: true },
+    appType: "spa",
+  });
+  
+  app.use(vite.middlewares);
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
