@@ -4,9 +4,10 @@ import path from "path";
 import Database from "better-sqlite3";
 import axios from "axios";
 import cron from "node-cron";
-import * as TI from "technicalindicators";
+import cors from "cors";
 
 const app = express();
+app.use(cors());
 const PORT = 3000;
 const db = new Database("crypto.db");
 

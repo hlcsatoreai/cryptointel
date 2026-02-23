@@ -113,22 +113,38 @@ export default function App() {
   const [riskCalc, setRiskCalc] = useState({ capital: 1000, riskPercent: 2 });
   const [selectedCrypto, setSelectedCrypto] = useState<CryptoData | null>(null);
 
+  const [isDemoMode, setIsDemoMode] = useState(false);
+
   const fetchData = async () => {
+    setLoading(true);
     try {
       const [cryptoRes, statsRes, eventsRes] = await Promise.all([
-        fetch('/api/cryptos'),
-        fetch('/api/market-status'),
-        fetch('/api/events')
+        fetch('/api/cryptos').catch(() => ({ json: () => null })),
+        fetch('/api/market-status').catch(() => ({ json: () => null })),
+        fetch('/api/events').catch(() => ({ json: () => null }))
       ]);
+      
       const cryptoData = await cryptoRes.json();
       const statsData = await statsRes.json();
       const eventsData = await eventsRes.json();
       
-      setCryptos(cryptoData);
-      setMarketStats(statsData);
-      setEvents(eventsData);
+      if (!cryptoData) {
+        setIsDemoMode(true);
+        // Fallback data for static hosting like Netlify
+        setCryptos([
+          { symbol: 'BTCEUR', name: 'Bitcoin', price_eur: 62450, change_24h: 2.5, final_score: 88, risk_level: 'Basso', recommendation: 'Ottima opportunità di accumulo', technical_score: 85, fundamental_score: 90, last_updated: '', volume_24h: 0, market_cap: 0, rsi: 0, macd_signal: '', trend: '', sentiment_score: 0, on_chain_score: 0 },
+          { symbol: 'ETHEUR', name: 'Ethereum', price_eur: 3120, change_24h: -1.2, final_score: 76, risk_level: 'Medio', recommendation: 'Monitorare supporti chiave', technical_score: 70, fundamental_score: 85, last_updated: '', volume_24h: 0, market_cap: 0, rsi: 0, macd_signal: '', trend: '', sentiment_score: 0, on_chain_score: 0 },
+        ] as any);
+        setMarketStats({ btc_dominance: 52.4, fear_greed_index: 65, market_risk: 'Medio', last_updated: '' });
+      } else {
+        setIsDemoMode(false);
+        setCryptos(cryptoData);
+        setMarketStats(statsData);
+        setEvents(eventsRes ? await eventsRes.json() : []);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
+      setIsDemoMode(true);
     } finally {
       setLoading(false);
     }
@@ -146,6 +162,11 @@ export default function App() {
     <div className="min-h-screen pb-20">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
+        {isDemoMode && (
+          <div className="bg-amber-500 text-white text-[10px] font-bold py-1 text-center uppercase tracking-widest">
+            Modalità Demo (Backend non rilevato - Ideale per Netlify/Vercel)
+          </div>
+        )}
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white font-bold">C</div>
@@ -418,7 +439,7 @@ export default function App() {
             {/* Event Calendar */}
             <Card title="Calendario Eventi" icon={Calendar}>
               <div className="space-y-4">
-                {events.map((event) => (
+                {events.length > 0 ? events.map((event) => (
                   <div key={event.id} className="flex gap-3">
                     <div className="flex-shrink-0 w-10 h-10 bg-slate-100 rounded-lg flex flex-col items-center justify-center">
                       <span className="text-[10px] font-bold text-slate-400 uppercase">{new Date(event.date).toLocaleString('it-IT', { month: 'short' })}</span>
@@ -429,7 +450,23 @@ export default function App() {
                       <Badge variant="info">{event.type}</Badge>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-xs text-slate-400 italic">Nessun evento imminente.</p>
+                )}
+              </div>
+            </Card>
+
+            {/* Deployment Guide for User */}
+            <Card title="Guida al Deploy" icon={ShieldCheck} className="bg-slate-900 text-white border-none">
+              <div className="space-y-3">
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  Questa app usa un database SQLite. Per farla funzionare al 100% con dati reali:
+                </p>
+                <ul className="text-[10px] space-y-2 list-disc pl-4 text-slate-300">
+                  <li>Non usare Netlify (solo statico).</li>
+                  <li>Usa <span className="text-emerald-400 font-bold">Render.com</span> o <span className="text-emerald-400 font-bold">Railway.app</span>.</li>
+                  <li>Configura il comando di start come: <code className="bg-slate-800 px-1 rounded">npm run dev</code>.</li>
+                </ul>
               </div>
             </Card>
           </div>
