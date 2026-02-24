@@ -128,19 +128,25 @@ export default function App() {
       const statsData = await statsRes.json();
       const eventsData = await eventsRes.json();
       
-      if (!cryptoData) {
+      if (!cryptoData || !Array.isArray(cryptoData)) {
         setIsDemoMode(true);
         // Fallback data for static hosting like Netlify
         setCryptos([
-          { symbol: 'BTCEUR', name: 'Bitcoin', price_eur: 62450, change_24h: 2.5, final_score: 88, risk_level: 'Basso', recommendation: 'Ottima opportunità di accumulo', technical_score: 85, fundamental_score: 90, last_updated: '', volume_24h: 0, market_cap: 0, rsi: 0, macd_signal: '', trend: '', sentiment_score: 0, on_chain_score: 0 },
-          { symbol: 'ETHEUR', name: 'Ethereum', price_eur: 3120, change_24h: -1.2, final_score: 76, risk_level: 'Medio', recommendation: 'Monitorare supporti chiave', technical_score: 70, fundamental_score: 85, last_updated: '', volume_24h: 0, market_cap: 0, rsi: 0, macd_signal: '', trend: '', sentiment_score: 0, on_chain_score: 0 },
+          { symbol: 'BTCEUR', name: 'Bitcoin', price_eur: 62450, change_24h: 2.5, final_score: 88, risk_level: 'Basso', recommendation: 'Ottima opportunità di accumulo - Trend rialzista confermato', technical_score: 85, fundamental_score: 90, last_updated: '', volume_24h: 0, market_cap: 0, rsi: 0, macd_signal: '', trend: '', sentiment_score: 80, on_chain_score: 75 },
+          { symbol: 'ETHEUR', name: 'Ethereum', price_eur: 3120, change_24h: -1.2, final_score: 76, risk_level: 'Medio', recommendation: 'Monitorare supporti chiave a 3000€', technical_score: 70, fundamental_score: 85, last_updated: '', volume_24h: 0, market_cap: 0, rsi: 0, macd_signal: '', trend: '', sentiment_score: 70, on_chain_score: 80 },
+          { symbol: 'SOLEUR', name: 'Solana', price_eur: 145, change_24h: 5.4, final_score: 82, risk_level: 'Medio', recommendation: 'Forte spinta on-chain, possibile continuazione', technical_score: 80, fundamental_score: 75, last_updated: '', volume_24h: 0, market_cap: 0, rsi: 0, macd_signal: '', trend: '', sentiment_score: 85, on_chain_score: 90 },
+          { symbol: 'BNBEUR', name: 'Binance Coin', price_eur: 580, change_24h: 0.8, final_score: 74, risk_level: 'Basso', recommendation: 'Accumulo lento e costante', technical_score: 65, fundamental_score: 80, last_updated: '', volume_24h: 0, market_cap: 0, rsi: 0, macd_signal: '', trend: '', sentiment_score: 70, on_chain_score: 65 },
         ] as any);
         setMarketStats({ btc_dominance: 52.4, fear_greed_index: 65, market_risk: 'Medio', last_updated: '' });
+        setEvents([
+          { id: 1, title: "Demo: Ethereum Pectra Upgrade", date: "2026-03-15", type: "Upgrade" },
+          { id: 2, title: "Demo: Bitcoin Halving Anniversary", date: "2026-04-20", type: "Event" }
+        ]);
       } else {
         setIsDemoMode(false);
         setCryptos(cryptoData);
         setMarketStats(statsData);
-        setEvents(eventsRes ? await eventsRes.json() : []);
+        setEvents(eventsData || []);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
